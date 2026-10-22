@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Трекер успеваемости студента</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f4f7f6; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .container { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); width: 100%; max-width: 500px; }
+        h1 { text-align: center; color: #2c3e50; margin-bottom: 20px; }
+        .form-group { display: flex; gap: 10px; margin-bottom: 20px; }
+        input, select, button { padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 16px; }
+        input { flex: 2; }
+        select { flex: 1; }
+        button { background-color: #2ecc71; color: white; border: none; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        button:hover { background-color: #27ae60; }
+        ul { list-style: none; padding: 0; }
+        li { background: #f9f9f9; padding: 12px; border-radius: 6px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; border-left: 5px solid #3498db; }
+        .delete-btn { background: #e74c3c; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; }
+        .delete-btn:hover { background: #c0392b; }
+        .summary { margin-top: 20px; padding: 15px; border-radius: 6px; text-align: center; font-size: 18px; font-weight: bold; background: #ecf0f1; }
+        .status-good { color: #27ae60; }
+        .status-bad { color: #e74c3c; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>📊 Трекер успеваемости</h1>
+    
+    <div class="form-group">
+        <input type="text" id="subject" placeholder="Название предмета (напр. Математика)">
+        <select id="grade">
+            <option value="5">5 (Отлично)</option>
+            <option value="4">4 (Хорошо)</option>
+            <option value="3">3 (Удовл.)</option>
+            <option value="2">2 (Неуд.)</option>
+        </select>
+        <button onclick="addSubject()">Добавить</button>
+    </div>
+
+    <ul id="subjects-list"></ul>
+
+    <div class="summary">
+        Средний балл: <span id="gpa">0.00</span>
+        <div id="status" style="font-size: 14px; margin-top: 5px;">Добавьте предметы</div>
+    </div>
+</div>
+
+<script>
+    let data = JSON.parse(localStorage.getItem('student_grades')) || [];
+
+    function updateUI() {
+        const list = document.getElementById('subjects-list');
+        list.innerHTML = '';
+        let total = 0;
+
+        data.forEach((item, index) => {
+            total += parseInt(item.grade);
+            list.innerHTML += `
+                <li>
+                    <span><strong>${item.name}</strong> — Оценка: ${item.grade}</span>
+                    <button class="delete-btn" onclick="deleteSubject(${index})">Удалить</button>
+                </li>
+            `;
+        });
+
+        const gpa = data.length ? (total / data.length).toFixed(2) : 0;
+        document.getElementById('gpa').innerText = gpa;
+
+        const statusEl = document.getElementById('status');
+        if (!data.length) {
+            statusEl.innerText = "Список пуст";
+            statusEl.className = "";
+        } else if (gpa >= 4.5) {
+            statusEl.innerText = "🌟 Отличный результат! Идеально для стипендии.";
+            statusEl.className = "status-good";
+        } else if (gpa >= 3.6) {
+            statusEl.innerText = "👍 Хорошая успеваемость. Стабильно!";
+            statusEl.className = "status-good";
+        } else {
+            statusEl.innerText = "⚠️ Внимание: нужно подтянуть оценки.";
+            statusEl.className = "status-bad";
+        }
+    }
+
+    function addSubject() {
+        const nameInput = document.getElementById('subject');
+        const gradeInput = document.getElementById('grade');
+
+        if (!nameInput.value.trim()) return alert('Введите название предмета');
+
+        data.push({ name: nameInput.value, grade: gradeInput.value });
+        localStorage.setItem('student_grades', JSON.stringify(data));
+        nameInput.value = '';
+        updateUI();
+    }
+
+    function deleteSubject(index) {
+        data.splice(index, 1);
+        localStorage.setItem('student_grades', JSON.stringify(data));
+        updateUI();
+    }
+
+    // Запуск при загрузке страницы
+    updateUI();
+</script>
+
+</body>
+</html>
